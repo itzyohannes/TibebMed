@@ -1,20 +1,29 @@
-import type { Metadata } from "next"
-import { Geist, Geist_Mono } from "next/font/google"
+import type { Metadata, Viewport } from "next"
+import { Inter, Playfair_Display } from "next/font/google"
 import "./globals.css"
+import { SiteHeader } from "@/components/site-header"
+import { SiteFooter } from "@/components/site-footer"
 
-const geistSans = Geist({
+const inter = Inter({
   subsets: ["latin"],
-  variable: "--font-geist-sans",
+  variable: "--font-inter",
 })
 
-const geistMono = Geist_Mono({
+const playfair = Playfair_Display({
   subsets: ["latin"],
-  variable: "--font-geist-mono",
+  variable: "--font-playfair",
 })
 
 export const metadata: Metadata = {
-  title: "TibebMed",
-  description: "TibebMed - Your Medical Platform",
+  title: "TibebMed - Ethiopian Traditional Medicine & Disease Prediction",
+  description:
+    "A disease prediction platform powered by symptom analysis, recommending Ethiopian traditional medicines including herbs, plants, and natural remedies.",
+}
+
+export const viewport: Viewport = {
+  themeColor: "#2d6a4f",
+  width: "device-width",
+  initialScale: 1,
 }
 
 export default function RootLayout({
@@ -24,8 +33,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased`}>
-        {children}
+      <body
+        className={`${inter.variable} ${playfair.variable} font-sans antialiased`}
+      >
+        <div className="flex min-h-screen flex-col">
+          <SiteHeader />
+          <main className="flex-1">{children}</main>
+          <SiteFooter />
+        </div>
       </body>
     </html>
   )
