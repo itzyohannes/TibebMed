@@ -1,5 +1,6 @@
 "use client"
 
+import useSWR from "swr"
 import { symptoms as allSymptoms } from "@/lib/data/symptoms"
 import Link from "next/link"
 import {
@@ -12,6 +13,20 @@ import {
   Info,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+
+const fetcher = async ([url, symptomIds]: [string, string[]]) => {
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ symptomIds }),
+  })
+  if (!res.ok) throw new Error("Prediction failed")
+  return res.json()
+}
+
+interface PredictionResultsProps {
+  symptomIds: string[]
+}
 
 interface PredictionMedicine {
   id: string
@@ -42,14 +57,47 @@ interface Prediction {
   medicines: PredictionMedicine[]
 }
 
-interface PredictionResultsProps {
-  symptomIds: string[]
-  predictions: Prediction[]
-  selectedSymptomCount: number
-}
+export function PredictionResults({ symptomIds }: PredictionResultsProps) {
+  const { data, error, isLoading } = useSWR(
+    symptomIds.length >= 2 ? ["/api/predict", symptomIds] : null,
+    fetcher
+  )
 
-export function PredictionResults({ symptomIds, predictions, selectedSymptomCount }: PredictionResultsProps) {
   const symptomNameMap = new Map(allSymptoms.map((s) => [s.id, s.name]))
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-muted border-t-primary" />
+        <p className="mt-4 text-sm text-muted-foreground">
+          Analyzing your symptoms...
+        </p>
+      </div>
+    )
+  }
+
+  if (error || !data) {
+    return (
+      <div className="mx-auto max-w-lg rounded-xl border border-destructive/20 bg-destructive/5 p-8 text-center">
+        <AlertTriangle className="mx-auto h-8 w-8 text-destructive" />
+        <h2 className="mt-3 text-lg font-semibold text-foreground">
+          Analysis Failed
+        </h2>
+        <p className="mt-2 text-sm text-muted-foreground">
+          We could not analyze your symptoms. Please try again.
+        </p>
+        <Link
+          href="/symptom-checker"
+          className="mt-4 inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Try Again
+        </Link>
+      </div>
+    )
+  }
+
+  const predictions: Prediction[] = data.predictions
 
   if (predictions.length === 0) {
     return (
@@ -97,7 +145,7 @@ export function PredictionResults({ symptomIds, predictions, selectedSymptomCoun
           Analysis Summary
         </h2>
         <p className="mt-1 text-sm text-foreground">
-          Based on <strong>{selectedSymptomCount} symptoms</strong>, we found{" "}
+          Based on <strong>{data.selectedSymptomCount} symptoms</strong>, we found{" "}
           <strong>{predictions.length} possible condition{predictions.length > 1 ? "s" : ""}</strong>.
         </p>
         <div className="mt-3 flex flex-wrap gap-1.5">

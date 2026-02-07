@@ -1,7 +1,6 @@
 import type { Metadata } from "next"
 import { redirect } from "next/navigation"
 import { PredictionResults } from "@/components/prediction-results"
-import { predictDiseases } from "@/lib/prediction-engine"
 
 export const metadata: Metadata = {
   title: "Prediction Results - TibebMed",
@@ -26,8 +25,6 @@ export default async function ResultsPage({
     redirect("/symptom-checker")
   }
 
-  const predictions = predictDiseases(symptomIds)
-
   return (
     <div className="mx-auto max-w-4xl px-4 py-8 lg:px-8 lg:py-12">
       <div className="mb-8">
@@ -40,11 +37,7 @@ export default async function ResultsPage({
         </p>
       </div>
 
-      <PredictionResults
-        symptomIds={symptomIds}
-        predictions={predictions}
-        selectedSymptomCount={symptomIds.length}
-      />
+      <PredictionResults symptomIds={symptomIds} />
     </div>
   )
 }
